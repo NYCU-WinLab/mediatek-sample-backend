@@ -4,15 +4,6 @@ Starter repo for the Claude Code × MediaTek workshop. A small in-memory
 Java backend for an internal reporting tool — create a report, then export
 it as plain text.
 
-## Deploy (workshop)
-
-```sh
-./scripts/deploy.sh
-```
-
-Packs the repo and deploys it to your workshop server via the course MCP
-endpoint. Needs `.mcp.json` in the repo root (see below) and `python3`.
-
 ## Run
 
 ```sh
