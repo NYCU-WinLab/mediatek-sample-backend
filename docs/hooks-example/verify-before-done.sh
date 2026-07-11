@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
-# Stop hook: a small nudge before the session ends.
+# Stop hook: intercept the agent once, right as it claims to be done, and
+# make it state the verification status before the session may end.
 #
-# Claude Code runs every hook registered under "Stop" each time the agent
-# is about to finish responding. This one doesn't inspect the conversation
-# at all — it just prints a reminder to stderr so it shows up wherever the
-# session's hook output is surfaced.
-#
-# Exit 0 keeps this advisory-only: it never blocks the session from
-# ending. If you want a hard gate instead, exit 2 and add your own check
-# for whether verification already happened — otherwise every Stop event
-# re-triggers the same block and the session can never end.
+# Claude Code runs Stop hooks each time the agent is about to finish
+# responding. Emitting {"decision":"block"} feeds `reason` back to the
+# agent, which must respond to it. The stop_hook_active guard lets the
+# session end on the following stop — without it this would loop forever.
 set -euo pipefail
 
-cat >&2 <<'EOF'
-[verify-before-done] Before calling this done: did you actually run the
-build / tests / whatever proves it works, and look at the output — not
-just assume it's fine?
-EOF
+INPUT="$(cat)"
+if printf '%s' "$INPUT" | grep -q '"stop_hook_active":[[:space:]]*true'; then
+  exit 0
+fi
 
-exit 0
+cat <<'JSON'
+{"decision": "block", "reason": "收工前的驗收檢查:這次的修改 deploy 了嗎?Run probes 跑了嗎、全綠嗎?把驗收狀態講清楚再收工——還沒驗,就先去驗。"}
+JSON

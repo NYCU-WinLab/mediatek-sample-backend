@@ -1,33 +1,26 @@
-# Stop hook example
+# verify-before-done — Stop hook example
 
-A minimal example of a Claude Code [`Stop`
-hook](https://docs.claude.com/en/docs/claude-code/hooks) — a script the
-agent runs on itself right before it finishes responding. This one just
-prints a short reminder to double-check that whatever was just done was
-actually verified, not merely assumed to work.
+把「宣稱完成前先驗收」從一句叮嚀變成機器強制:agent 每次要收工時,
+這個 hook 會**攔它一次**,逼它把驗收狀態(deploy 了沒、probes 綠了沒)
+講清楚才放行。
 
-## Files
+## 裝法(在 repo 根目錄)
 
-- `verify-before-done.sh` — the hook script. Advisory only (exits `0`), so
-  it never blocks the session from ending; it just leaves a note.
-- `settings.snippet.json` — the `hooks` block to merge into a project's
-  `.claude/settings.json` (or `settings.local.json`) to wire it up.
+```sh
+mkdir -p .claude
+cp docs/hooks-example/settings.snippet.json .claude/settings.json
+```
 
-## Using it
+開新的 Claude Code session 後生效。之後每當 agent 說「完成」,你會看到
+它被攔下、補上一段驗收狀態說明,然後才真正結束。
 
-Merge the contents of `settings.snippet.json` into your `hooks` config,
-then restart the session. `$CLAUDE_PROJECT_DIR` is set by Claude Code
-itself, so the path resolves regardless of where the session is started
-from.
+## 拆掉
 
-## Making it a hard gate instead
+刪掉 `.claude/settings.json`(或其中的 Stop 區塊),開新 session。
 
-Swap the script's `exit 0` for `exit 2`, which tells Claude Code to block
-the stop and feed the script's stderr back to the agent as a reason to
-keep going. Do this carefully: a Stop hook fires again every time the
-agent tries to stop, so a script that unconditionally exits `2` will loop
-forever. A real gate needs its own way to tell "already verified" from
-"not yet" — for example, checking whether the last test run's exit code
-was recorded somewhere in the session, or requiring the agent to write a
-marker file after verification. This example leaves that part out on
-purpose to keep the sample small; it's a starting point, not a policy.
+## 原理
+
+Stop hook 輸出 `{"decision":"block","reason":"..."}` 時,Claude Code 會把
+reason 餵回給 agent、要求它回應;payload 裡的 `stop_hook_active` 用來
+辨識「這次 stop 已經攔過了」,第二次直接放行——不加這個 guard 會無限
+迴圈,session 永遠關不掉。
