@@ -25,9 +25,9 @@ public class RptMgr {
 
     // ---------------------------------------------------------------- CRUD
 
-    public Report mkRpt(String title, String date, String ownerId, List<Map<String, Object>> rows) {
+    public Report mkRpt(String title, String periodStart, String periodEnd, String ownerId, List<Map<String, Object>> rows) {
         String id = "rpt_" + gen.getAndIncrement();
-        Report r = new Report(id, title, date, ownerId, Instant.now().toString(), rows);
+        Report r = new Report(id, title, periodStart, periodEnd, ownerId, Instant.now().toString(), rows);
         data.put(id, r);
         return r;
     }
@@ -57,10 +57,11 @@ public class RptMgr {
 
     // ---------------------------------------------------------------- export activity log
 
-    public void pushLog(String reportId, String date, String fmt, boolean okFlag, int httpStatus) {
+    public void pushLog(String reportId, String periodStart, String periodEnd, String fmt, boolean okFlag, int httpStatus) {
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("reportId", reportId);
-        row.put("date", date);
+        row.put("periodStart", periodStart);
+        row.put("periodEnd", periodEnd);
         row.put("format", fmt);
         row.put("ok", okFlag);
         row.put("httpStatus", httpStatus);

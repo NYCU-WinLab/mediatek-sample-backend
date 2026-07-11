@@ -12,12 +12,15 @@ final class Hdr {
     private Hdr() {}
 
     static String build(Report r) {
-        LocalDate d = LocalDate.parse(r.date);
         StringBuilder sb = new StringBuilder();
-        sb.append("Generated: ").append(d.format(STAMP)).append('\n');
+        sb.append("Generated: ").append(LocalDate.now()).append('\n');
         sb.append("Report: ").append(r.title).append('\n');
-        sb.append("Period: ").append(r.date).append('\n');
+        sb.append("Period: ").append(fmt(r.periodStart)).append(" to ").append(fmt(r.periodEnd)).append('\n');
         sb.append("-".repeat(40));
         return sb.toString();
+    }
+
+    private static String fmt(String iso) {
+        return LocalDate.parse(iso).format(STAMP);
     }
 }

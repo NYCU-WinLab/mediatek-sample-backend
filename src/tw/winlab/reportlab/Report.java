@@ -8,15 +8,17 @@ import java.util.Map;
 public class Report {
     public String id;
     public String title;
-    public String date;
+    public String periodStart;
+    public String periodEnd;
     public String ownerId;
     public String createdAt;
     public List<Map<String, Object>> rows;
 
-    public Report(String id, String title, String date, String ownerId, String createdAt, List<Map<String, Object>> rows) {
+    public Report(String id, String title, String periodStart, String periodEnd, String ownerId, String createdAt, List<Map<String, Object>> rows) {
         this.id = id;
         this.title = title;
-        this.date = date;
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
         this.ownerId = ownerId;
         this.createdAt = createdAt;
         this.rows = rows;

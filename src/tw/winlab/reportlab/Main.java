@@ -115,22 +115,34 @@ public class Main {
 
         Map<String, Object> body = JsonUtil.parseObject(HttpUtil.readBody(ex));
         Object titleRaw = body.get("title");
-        Object dateRaw = body.get("date");
+        Object psRaw = body.get("periodStart");
+        Object peRaw = body.get("periodEnd");
         Object rowsRaw = body.get("rows");
 
         if (!(titleRaw instanceof String) || ((String) titleRaw).isBlank()) {
             HttpUtil.respond(ex, 400, Map.of("error", "title is required"));
             return;
         }
-        if (!(dateRaw instanceof String)) {
-            HttpUtil.respond(ex, 400, Map.of("error", "date is required"));
+        if (body.get("date") != null) {
+            HttpUtil.respond(ex, 400, Map.of("error", "date is no longer accepted; send periodStart and periodEnd instead"));
             return;
         }
-        String date = (String) dateRaw;
+        if (!(psRaw instanceof String) || !(peRaw instanceof String)) {
+            HttpUtil.respond(ex, 400, Map.of("error", "periodStart and periodEnd are required"));
+            return;
+        }
+        String periodStart = (String) psRaw;
+        String periodEnd = (String) peRaw;
+        LocalDate ps, pe;
         try {
-            LocalDate.parse(date);
+            ps = LocalDate.parse(periodStart);
+            pe = LocalDate.parse(periodEnd);
         } catch (Exception e) {
-            HttpUtil.respond(ex, 400, Map.of("error", "date must be yyyy-MM-dd"));
+            HttpUtil.respond(ex, 400, Map.of("error", "periodStart/periodEnd must be yyyy-MM-dd"));
+            return;
+        }
+        if (pe.isBefore(ps)) {
+            HttpUtil.respond(ex, 400, Map.of("error", "periodEnd must not be before periodStart"));
             return;
         }
         if (!(rowsRaw instanceof List)) {
@@ -147,7 +159,7 @@ public class Main {
             if (o instanceof Map) rows.add((Map<String, Object>) o);
         }
 
-        Report r = mgr.mkRpt((String) titleRaw, date, uid, rows);
+        Report r = mgr.mkRpt((String) titleRaw, periodStart, periodEnd, uid, rows);
         HttpUtil.respond(ex, 201, serialize(r, false));
     }
 
@@ -195,10 +207,10 @@ public class Main {
 
         try {
             String doc = ExportMgr.export(r, fmt);
-            mgr.pushLog(r.id, r.date, fmt, true, 200);
+            mgr.pushLog(r.id, r.periodStart, r.periodEnd, fmt, true, 200);
             HttpUtil.respondText(ex, 200, "text/plain; charset=utf-8", doc);
         } catch (Exception e) {
-            mgr.pushLog(r.id, r.date, fmt, false, 500);
+            mgr.pushLog(r.id, r.periodStart, r.periodEnd, fmt, false, 500);
             throw e; // let wrap() turn it into a 500
         }
     }
@@ -237,7 +249,8 @@ public class Main {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", r.id);
         m.put("title", r.title);
-        m.put("date", r.date);
+        m.put("periodStart", r.periodStart);
+        m.put("periodEnd", r.periodEnd);
         m.put("ownerId", r.ownerId);
         m.put("rowCount", r.rows == null ? 0 : r.rows.size());
         m.put("createdAt", r.createdAt);
