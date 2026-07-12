@@ -11,12 +11,15 @@ mkdir -p .claude
 cp docs/hooks-example/settings.snippet.json .claude/settings.json
 ```
 
+若 `.claude/settings.json` 已存在(自己的 permission allowlist、其他 hook),
+**別直接 cp 覆蓋**——打開 snippet,把裡面的 `Stop` 區塊手動併進既有檔案。
+
 開新的 Claude Code session 後生效。之後每當 agent 說「完成」,你會看到
 它被攔下、補上一段驗收狀態說明,然後才真正結束。
 
 ## 拆掉
 
-刪掉 `.claude/settings.json`(或其中的 Stop 區塊),開新 session。
+拆掉 `.claude/settings.json` 裡的 `Stop` 區塊(整檔只有這個 hook 的話直接刪檔),開新 session。
 
 ## 原理
 
